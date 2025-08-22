@@ -270,6 +270,22 @@ WHERE salary > (
         WHERE dept_name = 'IT'
     )
 );
+
+```
+
+OR
+
+```
+
+SELECT e.name
+FROM employee e
+JOIN department d ON e.dept_id = d.dept_id
+WHERE e.salary > (
+    SELECT MAX(e2.salary)
+    FROM employee e2
+    JOIN department d2 ON e2.dept_id = d2.dept_id
+    WHERE d2.dept_name = 'IT'
+);
 ```
 
 #### Q2. Find employees whose salary is **equal to the minimum salary** in their department.
