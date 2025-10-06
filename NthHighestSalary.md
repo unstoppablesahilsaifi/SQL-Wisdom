@@ -164,4 +164,109 @@ Example with `RANK()`:
 * Inner query → rank assign karti hai salary ko (`rn`) descending order me.
 * Outer query → bas wo salary select karti hai jiska rank `2` ho → **Second Highest Salary**.
 
+  ---
+
+
+---
+
+## 👇 Table: `Employee`
+
+| emp_id | emp_name | salary |
+| ------ | -------- | ------ |
+| 1      | Amit     | 90000  |
+| 2      | Sahil    | 70000  |
+| 3      | Ravi     | 70000  |
+| 4      | Mohit    | 50000  |
+| 5      | Ankit    | 40000  |
+
+---
+
+## 🔹 Query with `ROW_NUMBER()`
+
+```sql
+SELECT salary 
+FROM (
+   SELECT salary,
+          ROW_NUMBER() OVER (ORDER BY salary DESC) AS rn
+   FROM Employee
+) t
+WHERE rn = 2;
+```
+
+### 🧾 Step-by-step internal ranking:
+
+| salary | rn |
+| ------ | -- |
+| 90000  | 1  |
+| 70000  | 2  |
+| 70000  | 3  |
+| 50000  | 4  |
+| 40000  | 5  |
+
+### ✅ Final Output:
+
+```
+salary
+-------
+70000
+```
+
+👉 Sirf ek record (first 70000) aaya kyunki `ROW_NUMBER()` **unique rank assign karta hai**,
+even if values same ho.
+Dusre 70000 wale ko rn = 3 mil gaya tha.
+
+---
+
+## 🔹 Query with `DENSE_RANK()`
+
+```sql
+SELECT salary 
+FROM (
+   SELECT salary,
+          DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
+   FROM Employee
+) t
+WHERE rnk = 2;
+```
+
+### 🧾 Step-by-step internal ranking:
+
+| salary | rnk |
+| ------ | --- |
+| 90000  | 1   |
+| 70000  | 2   |
+| 70000  | 2   |
+| 50000  | 3   |
+| 40000  | 4   |
+
+### ✅ Final Output:
+
+```
+salary
+-------
+70000
+70000
+```
+
+👉 Dono records aaye kyunki `DENSE_RANK()` **same salary ko same rank** deta hai.
+Yani ye *distinct salary-based* ranking karta hai.
+
+---
+
+## ⚖️ Final Comparison Summary
+
+| Function         | Internal Rank | Final Output for rank=2 | Description               |
+| ---------------- | ------------- | ----------------------- | ------------------------- |
+| **ROW_NUMBER()** | 1, 2, 3, 4, 5 | One row (first 70000)   | Ranks every row uniquely  |
+| **DENSE_RANK()** | 1, 2, 2, 3, 4 | Two rows (both 70000)   | Groups duplicate salaries |
+
+---
+
+💬 **Interview-ready line:**
+
+> “If interviewer wants *second record*, I’ll use ROW_NUMBER().
+> But if he wants *second highest distinct salary*, I’ll use DENSE_RANK().”
+
+
+
 
