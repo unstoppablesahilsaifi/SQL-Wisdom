@@ -199,3 +199,167 @@ Alag-alag update
 Cursor hi ye sab karta hai.
 ```
 
+---
+
+# 🟦 **EXAMPLE 1: Cursor se Negative Balance Accounts ko Suspend karna**
+
+## 📌 **Table: Account**
+
+| AccID | Name   | Balance |
+| ----- | ------ | ------- |
+| 101   | Sahil  | 2000    |
+| 102   | Tushar | -500    |
+| 103   | Deepak | 8000    |
+| 104   | Aman   | -1200   |
+
+### 🎯 **Requirement**
+
+```
+Balance < 0 ho → status = 'SUSPENDED'
+Balance >= 0 ho → status = 'ACTIVE'
+
+SELECT ye row-by-row IF/ELSE nahi kar sakta → cursor kar sakta hai.
+```
+
+---
+
+## 📌 **Cursor Code**
+
+```sql
+DECLARE @AccID INT, @Balance INT;
+
+DECLARE acc_cursor CURSOR FOR
+SELECT AccID, Balance FROM Account;
+
+OPEN acc_cursor;
+
+FETCH NEXT FROM acc_cursor INTO @AccID, @Balance;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    IF @Balance < 0
+        UPDATE Account SET Status = 'SUSPENDED' WHERE AccID = @AccID;
+    ELSE
+        UPDATE Account SET Status = 'ACTIVE' WHERE AccID = @AccID;
+
+    FETCH NEXT FROM acc_cursor INTO @AccID, @Balance;
+END
+
+CLOSE acc_cursor;
+DEALLOCATE acc_cursor;
+```
+
+---
+
+## 🔍 **Step-by-Step Processing**
+
+```
+Row 1 → (2000)
+Balance >= 0 → ACTIVE
+
+Row 2 → (-500)
+Negative → SUSPENDED
+
+Row 3 → (8000)
+Positive → ACTIVE
+
+Row 4 → (-1200)
+Negative → SUSPENDED
+```
+
+---
+
+## 📊 **Final Output Table**
+
+| AccID | Name   | Balance | Status    |
+| ----- | ------ | ------- | --------- |
+| 101   | Sahil  | 2000    | ACTIVE    |
+| 102   | Tushar | -500    | SUSPENDED |
+| 103   | Deepak | 8000    | ACTIVE    |
+| 104   | Aman   | -1200   | SUSPENDED |
+
+---
+
+# 🟩 **EXAMPLE 2: Cursor se Product Price Auto-Update**
+
+## 📌 **Table: Product**
+
+| ProductID | ProductName | Price |
+| --------- | ----------- | ----- |
+| 1         | Laptop      | 60000 |
+| 2         | Mouse       | 500   |
+| 3         | Keyboard    | 1500  |
+| 4         | Chair       | 7000  |
+
+### 🎯 **Requirement**
+
+```
+Price > 5000 → Increase by 8%
+Price <= 5000 → Increase by 3%
+```
+
+---
+
+## 📌 **Cursor Code**
+
+```sql
+DECLARE @PID INT, @Price INT;
+
+DECLARE price_cursor CURSOR FOR
+SELECT ProductID, Price FROM Product;
+
+OPEN price_cursor;
+
+FETCH NEXT FROM price_cursor INTO @PID, @Price;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    IF @Price > 5000
+        UPDATE Product SET Price = Price * 1.08 WHERE ProductID = @PID;
+    ELSE
+        UPDATE Product SET Price = Price * 1.03 WHERE ProductID = @PID;
+
+    FETCH NEXT FROM price_cursor INTO @PID, @Price;
+END
+
+CLOSE price_cursor;
+DEALLOCATE price_cursor;
+```
+
+---
+
+## 🔍 **Step-by-Step Processing**
+
+```
+Row 1 → Laptop (60000)
+60000 > 5000 → 8% increase
+New = 60000 × 1.08 = 64800
+
+Row 2 → Mouse (500)
+<= 5000 → 3% increase
+New = 500 × 1.03 = 515
+
+Row 3 → Keyboard (1500)
+<= 5000 → 3% increase
+New = 1500 × 1.03 = 1545
+
+Row 4 → Chair (7000)
+5000 → 8% increase
+New = 7000 × 1.08 = 7560
+```
+
+---
+
+## 📊 **Final Output Table**
+
+| ProductID | ProductName | Price (Updated) |
+| --------- | ----------- | --------------- |
+| 1         | Laptop      | 64800           |
+| 2         | Mouse       | 515             |
+| 3         | Keyboard    | 1545            |
+| 4         | Chair       | 7560            |
+
+---
+
+
+
